@@ -2,64 +2,72 @@ package com.qrsof.users_api.controllers;
 
 
 import com.qrsof.users_api.models.User;
+import com.qrsof.users_api.services.UserService;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
-
-import java.util.ArrayList;
-import java.util.Date;
+import com.qrsof.users_api.utils.JWTUtil;
+import java.util.HashMap;
 import java.util.List;
-import java.util.UUID;
+import java.util.Map;
+
 
 @RestController
 @RequestMapping("users")
 public class UserController {
+@Autowired
+private UserService userService;
+
+    @Autowired
+    private JWTUtil jwtUtil;
 
     @RequestMapping(value = "/all", method = RequestMethod.GET)
     List<User> getAllUsers() {
-        List<User> users = new ArrayList<User>();
-        // Crear usuarios y agregarlos a la lista
-        users.add(new User(102L, "Juan", "Pérez", "juan.perez@example.com", "555-1234", new Date()));
-        users.add(new User(101L, "María", "García", "maria.garcia@example.com", "555-5678", new Date()));
-        users.add(new User(100L, "Carlos", "López", "carlos.lopez@example.com", "555-8765", new Date()));
-        return users;
+        return userService.getAllUsers();
+
     }
 
     //Obtener usuario
     @RequestMapping(value = "/{id}", method = RequestMethod.GET)
     User getUserById(@PathVariable Long id) {
-        User user = new User();
-        user.setId(103L);
-        user.setName("Juan");
-        user.setLastName("Perez");
-        user.setEmail("juan@example.com");
-        user.setPhone("555-1234");
-        return user;
+        return userService.getUserById(id);
     }
 
 
     //Registrar usuario
-
-
     @RequestMapping(value = "/", method = RequestMethod.POST)
-    User registerUser(@RequestBody User user) {
-        //TODO: Registrar en la BD
-        return user;
-
-
+    void registerUser(@RequestBody User user) {
+        userService.registerUser(user);
     }
 
     //Actualizar usuario
     @RequestMapping(value = "/{id}", method = RequestMethod.PUT)
     User updateUser(@RequestBody User user) {
-        //TODO: Actualizar en la BD
+    userService.updateUser(user);
         return user;
     }
 
     //Eliminar usuario
     @RequestMapping(value = "/{id}", method = RequestMethod.DELETE)
-    User deleteUser(@PathVariable Long id) {
-        //TODO Eliminar de la BD
-        return null;
+    void deleteUser(@PathVariable Long id) {
+       userService.deleteUser(id);
+
     }
+
+    @RequestMapping(value = "/login", method = RequestMethod.POST)
+    Map<String, Object> login(@RequestBody User dto) {
+        User user = userService.login(dto);
+
+        Map<String, Object> result = new HashMap<>();
+        if (user != null) {
+            String token = jwtUtil.create(String.valueOf(user.getId()), user.getEmail());
+            result.put("token", token);
+            result.put("user", user);
+        }
+        return result;
+    }
+
+
+
 
 
 }
